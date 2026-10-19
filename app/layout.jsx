@@ -1,5 +1,7 @@
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { SimulationProvider } from "@/lib/simulation-context";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const metadata = {
   title: "SpreadForge — Relative-Value Research",
@@ -19,7 +21,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        {children}
+        <SimulationProvider>
+          <AppShell>{children}</AppShell>
+        </SimulationProvider>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
