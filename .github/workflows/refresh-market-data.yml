@@ -1,0 +1,68 @@
+name: Refresh MCX Market Data
+
+# Runs Mon–Fri at 17:35 IST (12:05 UTC) — after MCX session closes at 17:30 IST
+# Also triggers on push to main when scraper scripts change, and can be run manually.
+on:
+  schedule:
+    - cron: "05 12 * * 1-5"
+  push:
+    paths:
+      - "python_pipeline/scrape_live_bhavcopy.py"
+      - "python_pipeline/fetch_mcx_live.py"
+      - ".github/workflows/refresh-market-data.yml"
+  workflow_dispatch: # Manual trigger from GitHub UI → Actions tab
+
+# Required for git push back to repo
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # Playwright scraper takes 1–3 min; kill at 15m if stuck
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Use the default GITHUB_TOKEN — has contents:write via permissions above
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: pip install playwright
+
+      # Install Playwright's bundled Chromium + all OS-level deps in one step
+      - name: Install Playwright browsers
+        run: python -m playwright install chromium --with-deps
+
+      - name: Run MCX Bhavcopy scraper
+        run: python python_pipeline/scrape_live_bhavcopy.py
+        # Script writes to:
+        #   data/live_summary.json
+        #   data/bhavcopy_gold.json
+
+      - name: Check if data files were updated
+        id: diff
+        run: |
+          git diff --quiet data/live_summary.json data/bhavcopy_gold.json \
+            && echo "changed=false" >> "$GITHUB_OUTPUT" \
+            || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push refreshed market data
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/live_summary.json data/bhavcopy_gold.json
+          git commit -m "chore(data): refresh MCX gold futures [$(date -u +'%Y-%m-%d %H:%M UTC')]"
+          git push
+
+      - name: No changes detected
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "Data files unchanged — MCX may have returned the same settlement prices. Nothing to commit."

@@ -1225,3 +1225,140 @@ tbody tr:last-child td {
     transition: none !important;
   }
 }
+
+/* ==========================================================================
+   VERDICT BANNER & AUDIT CHECKS
+   ========================================================================== */
+
+.verdict-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  border: 1px solid var(--line);
+}
+
+.verdict-pass {
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+}
+
+.verdict-fail {
+  background: color-mix(in srgb, var(--amber) 10%, var(--panel));
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+}
+
+.verdict-icon svg {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.verdict-pass .verdict-icon svg {
+  color: var(--accent);
+}
+
+.verdict-fail .verdict-icon svg {
+  color: var(--amber);
+}
+
+.verdict-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.verdict-pass .verdict-eyebrow {
+  color: var(--accent);
+}
+
+.verdict-fail .verdict-eyebrow {
+  color: var(--amber);
+}
+
+.verdict-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+}
+
+.verdict-description {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+}
+
+.audit-checks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.audit-check-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.audit-check-card.passed {
+  border-left: 3px solid var(--accent);
+}
+
+.audit-check-card.failed {
+  border-left: 3px solid var(--amber);
+}
+
+.check-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-card-header .check-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.check-card-header .check-value {
+  font-size: 11px;
+}
+
+.check-explanation {
+  font-size: 11px;
+  color: var(--muted-text);
+  line-height: 1.45;
+}
+
+.red-icon {
+  color: var(--red);
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+}

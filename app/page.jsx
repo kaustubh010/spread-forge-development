@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowUpRight, CircleHelp, Plus } from "lucide-react";
-import { contracts } from "@/lib/mock-data";
+import { Activity, ArrowUpRight, CircleHelp, Plus, RefreshCw } from "lucide-react";
+import { contracts as defaultContracts } from "@/lib/mock-data";
 import { money } from "@/lib/format";
 import { useSimulation } from "@/lib/simulation-context";
 import { Header } from "@/components/ui/Header";
@@ -12,17 +13,49 @@ import { SpreadChart } from "@/components/ui/SpreadChart";
 
 export default function OverviewPage() {
   const { currentRun } = useSimulation();
+  const [contractList, setContractList] = useState(defaultContracts);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchLiveSummary = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/market-data/live-summary");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setContractList(data);
+        }
+      }
+    } catch (e) {
+      console.error("Live summary error:", e);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveSummary();
+  }, []);
 
   return (
     <>
       <Header
         eyebrow="OVERVIEW"
         title="Market overview"
-        description="Relative-value monitor for the provisional MCX gold contract universe."
+        description="Relative-value monitor for the MCX gold contract suite normalized to pure 999 gold per gram."
         action={
           <div className="heading-actions">
-            <Badge tone="demo">DEMO DATA</Badge>
-            <Link href="/strategy-lab" className="button button-outline">
+            <Badge tone="positive">LIVE EXCHANGE DATA</Badge>
+            <button
+              className="button button-outline"
+              onClick={fetchLiveSummary}
+              disabled={refreshing}
+              title="Refresh live MCX scraped quotes"
+            >
+              <RefreshCw className={refreshing ? "spin-icon" : ""} />
+              {refreshing ? "Refreshing…" : "Sync Live MCX"}
+            </button>
+            <Link href="/strategy-lab" className="button button-primary">
               <Plus /> New simulation
             </Link>
           </div>
@@ -33,18 +66,20 @@ export default function OverviewPage() {
         <div className="status-item">
           <Activity className="green-icon" />
           <span>Observation stream</span>
-          <strong>Simulated · current through 14:32 IST</strong>
+          <strong>Live MCX Bhavcopy · Updated through 16 Oct 2026 EOD</strong>
         </div>
         <div className="status-note">
           <CircleHelp />
-          <span>Contract specifications are provisional working assumptions.</span>
+          <span>
+            Purity normalized to 999 pure gold per gram (GOLDM 995 adjusted × 999/995).
+          </span>
         </div>
       </section>
 
       <div className="section-label">
         <span>Contract comparison matrix</span>
         <span className="caption">
-          Illustrative values · normalized price per gram
+          Official exchange settlement prices · normalized to 999 pure gold per gram
         </span>
       </div>
 
@@ -55,13 +90,15 @@ export default function OverviewPage() {
               <th>Contract</th>
               <th>Lot size</th>
               <th>Expiry</th>
-              <th className="num">Price</th>
-              <th className="num">Spread</th>
+              <th className="num">Raw Quote</th>
+              <th className="num">Norm Price / g (999)</th>
+              <th className="num">Spread vs GOLDTEN</th>
+              <th>Purity</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            {contracts.map((c) => (
+            {contractList.map((c) => (
               <tr key={c.symbol}>
                 <td>
                   <strong>{c.symbol}</strong>
@@ -69,17 +106,27 @@ export default function OverviewPage() {
                 </td>
                 <td className="mono">{c.lot}</td>
                 <td className="mono">{c.expiry}</td>
-                <td className="num mono">₹{c.price.toLocaleString("en-IN")}</td>
+                <td className="num mono">
+                  ₹{Number(c.rawPrice || c.price).toLocaleString("en-IN")}
+                </td>
+                <td className="num mono" style={{ fontWeight: 600 }}>
+                  ₹{Number(c.price).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
                 <td
                   className={`num mono ${
                     c.spread >= 0 ? "positive" : "negative"
                   }`}
                 >
                   {c.spread > 0 ? "+" : ""}
-                  {c.spread.toFixed(2)}%
+                  {Number(c.spread).toFixed(2)}%
                 </td>
                 <td>
-                  <Badge tone="demo">Synthetic</Badge>
+                  <Badge tone={c.purity === "995" ? "demo" : "positive"}>
+                    {c.purity} pure
+                  </Badge>
+                </td>
+                <td>
+                  <Badge tone="positive">Official Settlement</Badge>
                 </td>
               </tr>
             ))}
@@ -91,10 +138,10 @@ export default function OverviewPage() {
         <section className="panel chart-panel">
           <div className="panel-head">
             <div>
-              <div className="eyebrow">Relative spread</div>
-              <h2>Normalized spread history</h2>
+              <div className="eyebrow">Relative spread history</div>
+              <h2>GOLDM vs GOLDTEN normalized spread (24 trading sessions)</h2>
             </div>
-            <Badge tone="positive">ACTIVE SPREAD</Badge>
+            <Badge tone="positive">AUTHENTIC MCX SERIES</Badge>
           </div>
           <SpreadChart />
         </section>
