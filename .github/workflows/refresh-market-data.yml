@@ -33,9 +33,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: "python_pipeline/requirements.txt"
 
       - name: Install Python dependencies
-        run: pip install playwright
+        run: pip install -r python_pipeline/requirements.txt
 
       # Install Playwright's bundled Chromium + all OS-level deps in one step
       - name: Install Playwright browsers
