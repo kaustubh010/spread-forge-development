@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-21T17:05:42.461383",
+  "generatedAt": "2026-10-22T17:11:47.900772",
   "dataSource": "MCX Live Bhavcopy Scraped Data (Official Settlement)",
   "sourceUrl": "https://www.mcxindia.com/market-data/bhavcopy",
   "tradingDaysCount": 0,
-  "latestTradingDate": "21/10/2026",
+  "latestTradingDate": "22/10/2026",
   "contracts": {
     "GOLDM": {
       "spec": {
