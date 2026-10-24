@@ -10,7 +10,7 @@ const SimulationContext = createContext(null);
 export function SimulationProvider({ children }) {
   const [currentRun, setCurrentRun] = useState(null);
   const [savedRuns, setSavedRuns] = useState([]);
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
