@@ -39,6 +39,7 @@ import {
   Accordion,
   Modal,
 } from "@/components/primitives";
+import { QuantAiChat } from "@/components/QuantAiChat";
 
 const API_URL = "/api/analyze";
 const WINDOW_DAYS = 7;
@@ -974,6 +975,9 @@ export default function App() {
                 fails to survive real MCX turnover charges, STT, and latency friction. Always verify cost hurdles before trading.
               </div>
             </Reveal>
+
+            {/* Floating Quant AI Chat (active when case is loaded) */}
+            <QuantAiChat caseData={result} />
           </>
         )}
 
