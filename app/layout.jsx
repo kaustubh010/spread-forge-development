@@ -7,8 +7,6 @@ export const metadata = {
   title: "SpreadForge — Relative-Value Research",
   description:
     "A quantitative research terminal for comparing provisional MCX gold futures spreads.",
-  generator: "SpreadForge",
-  icons: { icon: "/icon.svg", apple: "/apple-icon.png" },
 };
 
 export const viewport = {
