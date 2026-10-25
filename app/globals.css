@@ -1292,3 +1292,216 @@ body {
   gap: 12px;
   margin-top: 24px;
 }
+
+/* ==========================================================================
+   MOBILE & COMPACT SCREEN RESPONSIVENESS (320px - 768px)
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 12px 60px;
+  }
+
+  .topbar {
+    padding: 10px 14px;
+  }
+
+  .brand-name {
+    font-size: 17px;
+  }
+
+  .brand-tag {
+    font-size: 9.5px;
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .hero {
+    padding: 34px 14px 26px;
+    margin-bottom: 20px;
+  }
+
+  .deco-note {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: clamp(26px, 7vw, 36px);
+  }
+
+  .hero-sub {
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .tray {
+    padding: 26px 14px;
+    margin-bottom: 24px;
+  }
+
+  .tray-title {
+    font-size: 20px;
+  }
+
+  .tray-sub {
+    font-size: 12px;
+  }
+
+  .preset-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .preset-chip {
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .procedure {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .step.card {
+    padding: 16px;
+  }
+
+  .casebar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .case-name {
+    font-size: 18px;
+    word-break: break-all;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .actions .btn {
+    flex: 1;
+    padding: 8px 6px;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .verdict {
+    grid-template-columns: 1fr;
+    padding: 18px 14px;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .mug-frame {
+    margin: 0 auto 8px;
+    width: 72px;
+    height: 72px;
+    font-size: 26px;
+  }
+
+  .verdict-share {
+    justify-content: center;
+  }
+
+  .verdict-share .big {
+    font-size: 34px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .note {
+    padding: 14px;
+  }
+
+  .stat-val {
+    font-size: 22px;
+  }
+
+  .timeline {
+    padding: 14px 12px;
+  }
+
+  .card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .head-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .chart-box {
+    height: 260px;
+  }
+
+  .lineup {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .suspect {
+    padding: 14px;
+  }
+
+  .notes {
+    padding: 16px;
+  }
+
+  .audit-strip {
+    padding: 16px 14px;
+  }
+
+  .audit-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .faq-q {
+    padding: 14px 16px;
+    font-size: 13.5px;
+  }
+
+  .faq-a {
+    padding: 0 16px 14px;
+    font-size: 12px;
+  }
+
+  .back-top {
+    bottom: 84px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .quant-chat-floating {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+
+  .quant-chat-modal {
+    bottom: 72px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    height: calc(100vh - 100px) !important;
+    max-height: 560px !important;
+    border-radius: 14px !important;
+  }
+}

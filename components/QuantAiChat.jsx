@@ -85,7 +85,7 @@ export function QuantAiChat({ caseData }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `**Think of it like this:** You found a $10 bill on the ground, but you had to pay a $15 fee to enter the room where it was lying.\n\n**1. The "Fee" is Bigger Than the "Prize"**\n* **The Move:** The price gap between the two gold contracts changed by about **104.5 bps**. This is the "prize" you were trying to catch.\n* **The Cost:** Just to buy and sell these contracts, the exchange and brokers charged you **₹4,200** in fees and slippage.\n* **The Result:** The prize wasn't big enough to cover the entry fee. You paid ₹4,200 to make a trade that only generated enough gross profit to lose you **₹2,866** in the end.\n\n**2. It Was Probably Just Luck (or Bad Luck)**\n* **The Score:** The result was **p = 0.22**.\n* **What that means:** There is a **22% chance** this price movement happened by pure random chance. In trading, we want less than 5%. You were essentially betting on a coin flip.\n\n**3. The "Retail" Gold is Tricky**\n* The main reason the prices moved was the "Retail 8g" gold (GOLDGUINEA).\n* Retail gold has wide gaps between buy and sell prices. What looked like a gap was just the market being messy.\n\n**4. The Purity Trap**\n* GOLDM is **99.5% pure**, while others are **99.9% pure**.\n* To compare them fairly, you must multiply by **999/995**. Missing this means trading a purity difference rather than real alpha.\n\n**Summary:**\nYou paid a high toll (₹4,200) to chase a small, random price blip (104.5 bps) in a messy market. Official Verdict: **NO EDGE AFTER COSTS**.`,
+      content: `**Think of it like this:** You found a ₹500 note on the ground, but you had to pay a ₹750 fee to enter the room where it was lying.\n\n**1. The "Fee" is Bigger Than the "Prize"**\n* **The Move:** The price gap between the two gold contracts changed by about **104.5 bps**. This is the "prize" you were trying to catch.\n* **The Cost:** Just to buy and sell these contracts on MCX, exchange turnover fees, STT, and slippage cost you **₹4,200**.\n* **The Result:** The prize wasn't big enough to cover the entry fee. You paid ₹4,200 to execute a trade that ended with a realized net loss of **₹2,866**.\n\n**2. It Was Probably Just Luck (or Bad Luck)**\n* **The Score:** The result was **p = 0.22**.\n* **What that means:** There is a **22% chance** this price movement happened by pure random market noise. In trading, we want less than 5%. You were essentially betting on a coin flip.\n\n**3. The "Retail" Gold is Tricky**\n* The main reason the prices moved was the "Retail 8g" gold (GOLDGUINEA).\n* Retail gold has wide gaps between buy and sell prices. What looked like a gap was just the market being messy and illiquid.\n\n**4. The Purity Trap**\n* GOLDM is **95.5% pure (995)**, while others are **99.9% pure (999)**.\n* To compare them fairly, you must multiply by **999/995**. Missing this means trading a purity difference rather than real alpha.\n\n**Summary:**\nYou paid a high toll (₹4,200) to chase a small, random price blip (104.5 bps) in a messy retail market. Official Verdict: **NO EDGE AFTER COSTS**.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -211,7 +211,7 @@ export function QuantAiChat({ caseData }) {
 
   const promptChips = [
     "Why did I lose money on this trade?",
-    "Explain the $10 bill vs $15 fee analogy",
+    "Explain the ₹500 note vs ₹750 fee analogy",
     "What does Monte Carlo p = 0.22 mean?",
     "How does 995 vs 999 purity math work?",
     "Why is GOLDGUINEA 8g retail so tricky?",
@@ -221,6 +221,7 @@ export function QuantAiChat({ caseData }) {
     <>
       {/* Floating launcher trigger + Attention Popover */}
       <div
+        className="quant-chat-floating"
         style={{
           position: "fixed",
           bottom: 24,
@@ -292,36 +293,36 @@ export function QuantAiChat({ caseData }) {
             color: "#ffffff",
             border: "2px solid #ffffff",
             borderRadius: "50px",
-            padding: "13px 22px",
+            padding: "11px 18px",
             boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 8,
             cursor: "pointer",
             fontWeight: 800,
-            fontSize: "0.95rem",
+            fontSize: "0.88rem",
             fontFamily: "inherit",
           }}
         >
-          <span style={{ fontSize: 18 }}>⚡</span>
+          <span style={{ fontSize: 16 }}>⚡</span>
           <span>Explain with AI</span>
           {isOpen ? (
-            <span style={{ fontSize: 14, opacity: 0.8 }}>✕</span>
+            <span style={{ fontSize: 13, opacity: 0.8 }}>✕</span>
           ) : (
             <span
               style={{
-                width: 9,
-                height: 9,
+                width: 8,
+                height: 8,
                 borderRadius: "50%",
                 background: "#10b981",
-                boxShadow: "0 0 10px #10b981",
+                boxShadow: "0 0 8px #10b981",
               }}
             />
           )}
         </motion.button>
       </div>
 
-      {/* Floating Chat Modal (Expanded dimensions: 540px width, 640px height) */}
+      {/* Floating Chat Modal (Responsively bound for desktop and phone screens) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -329,18 +330,19 @@ export function QuantAiChat({ caseData }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 25, scale: 0.94 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="quant-chat-modal"
             style={{
               position: "fixed",
-              bottom: 84,
-              right: 24,
-              width: 540,
-              maxWidth: "calc(100vw - 32px)",
-              height: 640,
-              maxHeight: "calc(100vh - 100px)",
+              bottom: 80,
+              right: 20,
+              width: 520,
+              maxWidth: "calc(100vw - 28px)",
+              height: 600,
+              maxHeight: "calc(100vh - 96px)",
               zIndex: 9999,
               background: "var(--paper, #121820)",
               border: "1px solid var(--grid, #2a3544)",
-              borderRadius: 18,
+              borderRadius: 16,
               boxShadow: "0 25px 60px rgba(0,0,0,0.55)",
               display: "flex",
               flexDirection: "column",

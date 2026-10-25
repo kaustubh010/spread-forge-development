@@ -481,14 +481,9 @@ export default function App() {
           <>
             <Flashlight className="hero">
               <div className="deco-ring" aria-hidden="true" />
-              <div className="deco-note type" aria-hidden="true">
-                the gross quote
-                <br />
-                lies without costs.
-              </div>
 
               <motion.div className="case-tag type" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                CRIME INVESTIGATION / STATUS: READY
+                COMMODITY DERIVATIVES INTELLIGENCE / MCX INDIA
               </motion.div>
               <h1 className="hero-title display">
                 <SplitText text="Something dropped." />
@@ -498,10 +493,54 @@ export default function App() {
                 </span>
               </h1>
               <motion.p className="hero-sub type" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }}>
-                Equalize MCX gold contracts to pure 999 gold per gram. SpreadForge isolates the day the spread plummeted,
-                questions every contract leg, and audits whether statistical arbitrage survives real-world exchange costs.
+                Gold trades under 4 different contracts on MCX with varying purities (995 vs 999) and lot sizes.
+                When relative spreads diverge, traders assume free arbitrage exists. SpreadForge isolates the exact drop date,
+                decomposes contract factors, and audits whether your statistical edge actually survives exchange friction.
               </motion.p>
             </Flashlight>
+
+            {/* Core Mission & Value Cards */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 16,
+                marginBottom: 32,
+              }}
+            >
+              <div className="card" style={{ padding: "20px 22px", border: "2px solid var(--ink)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20, color: "#e5252a" }}>🔍</span>
+                  <h4 className="display" style={{ margin: 0, fontSize: "1.05rem" }}>The Problem</h4>
+                </div>
+                <p className="type" style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>
+                  Paper backtests deceive traders. A 104 bps spread move looks like easy profit until physical delivery premiums, 
+                  995/999 purity misadjustments, and ₹4,200 round-trip brokerage + STT erase the entire edge.
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: "20px 22px", border: "2px solid var(--ink)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20, color: "#10b981" }}>⚖️</span>
+                  <h4 className="display" style={{ margin: 0, fontSize: "1.05rem" }}>What We Solve</h4>
+                </div>
+                <p className="type" style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>
+                  Forensic factor decomposition. We normalize all contracts into pure 999 gold per gram, run 7-day dual-window 
+                  drop detection, and isolate which specific contract leg (e.g. GOLDM delivery divergence) drove the anomaly.
+                </p>
+              </div>
+
+              <div className="card" style={{ padding: "20px 22px", border: "2px solid var(--ink)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20, color: "#ffd60a" }}>🛡️</span>
+                  <h4 className="display" style={{ margin: 0, fontSize: "1.05rem" }}>Why It Protects Traders</h4>
+                </div>
+                <p className="type" style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>
+                  Disciplined 5-Gate quantitative audit. We stress-test trades with 2x costs and 1,000-iteration Monte Carlo shuffles 
+                  (p = 0.22). When costs exceed profits, SpreadForge issues an official warning: DO NOT TRADE.
+                </p>
+              </div>
+            </div>
 
             <motion.div
               className={"tray" + (dragging ? " over" : "")}
@@ -563,17 +602,17 @@ export default function App() {
                   data-hot
                   onClick={() => loadPreset("mcx-gold-spread", "MCX_GOLDM_vs_GOLDTEN_Bhavcopy.xlsx")}
                 >
-                  ⚡ Run Benchmark Investigation (Sep 15 – Oct 16)
+                  ⚡ Run Benchmark Case (Sep 15 – Oct 16)
                 </button>
               </div>
             </motion.div>
 
             <div className="procedure">
               {[
-                ["01", "Purity Normalization", "Adjusts 995 and 999 contracts into pure 999 gold per gram so prices are directly comparable."],
+                ["01", "Purity Normalization", "Adjusts 995 and 999 contracts into pure 999 gold per gram so prices in INR (₹) are directly comparable."],
                 ["02", "Dual-Window Scan", "Scans the daily spread with 7-day rolling windows to isolate the lasting drop date."],
                 ["03", "Factor Lineup", "Decomposes the drop across delivery legs, spot premiums, and retail lot frictions."],
-                ["04", "Institutional Cost Audit", "Deducts exchange fees and slippage to determine whether statistical edge survives."],
+                ["04", "Institutional Cost Audit", "Deducts exchange fees (₹) and slippage to determine whether statistical edge survives."],
               ].map(([n, title, text], i) => (
                 <Reveal key={n} delay={i * 0.08}>
                   <div className="step card">
