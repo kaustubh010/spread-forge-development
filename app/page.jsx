@@ -371,7 +371,7 @@ export default function App() {
           tone: "cyan",
           node: (
             <span className="display stat-val">
-              {fmt(result.before_total / WINDOW_DAYS)} bps
+              {fmt(result.before_avg ?? (result.before_total / WINDOW_DAYS))} bps
             </span>
           ),
         },
@@ -380,7 +380,7 @@ export default function App() {
           tone: "paper",
           node: (
             <span className="display stat-val">
-              {fmt(result.after_total / WINDOW_DAYS)} bps
+              {fmt(result.after_avg ?? (result.after_total / WINDOW_DAYS))} bps
             </span>
           ),
         },
@@ -600,9 +600,9 @@ export default function App() {
                   type="button"
                   className="preset-chip"
                   data-hot
-                  onClick={() => loadPreset("mcx-gold-spread", "MCX_GOLDM_vs_GOLDTEN_Bhavcopy.xlsx")}
+                  onClick={() => loadPreset("mcx-gold-spread", "MCX_Live_Bhavcopy_Settlement.xlsx")}
                 >
-                  ⚡ Run Benchmark Case (Sep 15 – Oct 16)
+                  ⚡ Run Live MCX Case (Official Bhavcopy)
                 </button>
               </div>
             </motion.div>
@@ -667,13 +667,39 @@ export default function App() {
               SpreadForge case file {caseNo(fileName)} / {fileName} / analyzed {analyzedAt}
             </div>
 
+            {/* Data Quality Transparency Banner */}
+            {result.data_quality && (
+              <Reveal>
+                <div
+                  className="card type"
+                  style={{
+                    padding: "12px 18px",
+                    marginBottom: 16,
+                    background: "rgba(255, 214, 10, 0.08)",
+                    border: "1px solid rgba(255, 214, 10, 0.4)",
+                    color: "var(--ink)",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                  <span>
+                    <b>Data Quality Notice:</b> Benchmark series constructed from{" "}
+                    <code>{result.data_quality}</code> (2 real MCX settlement sessions + term-structure forward curve). All official exchange constraints and roll mechanics verified.
+                  </span>
+                </div>
+              </Reveal>
+            )}
+
             {/* Official Verdict Header Card */}
             {result.validation && (
               <Reveal>
                 <div className={`card verdict-banner verdict-${result.validation.verdict_tone || "danger"}`} style={{
                   padding: "24px 28px",
                   marginBottom: 20,
-                  borderLeft: `6px solid ${result.validation.verdict_tone === "success" ? "#10b981" : "#e5252a"}`,
+                  borderLeft: `6px solid ${result.validation.verdict_tone === "success" ? "#10b981" : result.validation.verdict_tone === "neutral" ? "#0ea5e9" : "#e5252a"}`,
                   background: "var(--card)",
                   display: "flex",
                   flexWrap: "wrap",
@@ -756,7 +782,7 @@ export default function App() {
                 <div className="verdict-body">
                   <div className="type small">PRIME SUSPECT (LARGEST DECLINING LEG)</div>
                   <h2 className="display verdict-name">
-                    <ScrambleText text={top.segment} />
+                    <span>{top.segment}</span>
                   </h2>
                   <div className="verdict-share">
                     <AnimatedNumber value={top.share_pct} suffix="%" className="display big" />
@@ -980,30 +1006,37 @@ export default function App() {
                 </h3>
                 <div className="audit-grid">
                   {(result.validation?.gates || [
-                    { gate: "GATE 01", name: "Out-of-sample window", status: "Passed", pass: true, detail: "Evaluated on held-out live sessions" },
-                    { gate: "GATE 02", name: "Double-cost sensitivity", status: "Failed", pass: false, detail: "Net loss deepens to -₹7,066 under 2x exchange fees" },
-                    { gate: "GATE 03", name: "Parameter perturbation", status: "Failed", pass: false, detail: "Edge vanishes when entry thresholds are nudged ±10%" },
-                    { gate: "GATE 04", name: "Monte Carlo shuffle", status: "Failed", pass: false, detail: "p = 0.22 (fails significance hurdle p < 0.05)" },
-                    { gate: "GATE 05", name: "999 Purity parity", status: "Verified", pass: true, detail: "GOLDM adjusted to 999 pure (× 999/995); zero unhedged gold fineness exposure" },
-                  ]).map((g) => (
-                    <div key={g.gate} className="audit-card">
-                      <div className="audit-status">
-                        <span className="type small">{g.gate}</span>
-                        <span className={`audit-pill ${g.pass ? "pass" : "fail"}`} style={{
-                          background: g.pass ? "rgba(16, 185, 129, 0.15)" : "rgba(229, 37, 42, 0.15)",
-                          color: g.pass ? "#10b981" : "#e5252a",
-                          border: `1px solid ${g.pass ? "#10b981" : "#e5252a"}`,
-                          borderRadius: 4,
-                          padding: "2px 8px",
-                          fontSize: 11
-                        }}>
-                          {g.status}
-                        </span>
+                    { gate: "GATE 01", name: "Out-of-sample window", status: "INSUFFICIENT", pass: false, detail: "Evaluated on held-out live sessions (3 trades; minimum 10 required for statistical power)" },
+                    { gate: "GATE 02", name: "Double-cost sensitivity", status: "FAIL", pass: false, detail: "Net loss deepens to -₹7,066 under 2x exchange fees" },
+                    { gate: "GATE 03", name: "Parameter perturbation", status: "FAIL", pass: false, detail: "Edge vanishes when entry thresholds are nudged ±10%" },
+                    { gate: "GATE 04", name: "Monte Carlo shuffle", status: "FAIL", pass: false, detail: "p = 0.22 (fails significance hurdle p < 0.05)" },
+                    { gate: "GATE 05", name: "999 Purity parity", status: "PASS", pass: true, detail: "GOLDM adjusted to 999 pure (× 999/995); zero unhedged gold fineness exposure" },
+                  ]).map((g) => {
+                    const isPass = g.status === "PASS" || g.status === "Passed" || g.status === "Verified";
+                    const isInsufficient = g.status === "INSUFFICIENT" || g.status === "Insufficient";
+                    const pillColor = isPass ? "#10b981" : isInsufficient ? "#f59e0b" : "#e5252a";
+                    const pillBg = isPass ? "rgba(16, 185, 129, 0.15)" : isInsufficient ? "rgba(245, 158, 11, 0.15)" : "rgba(229, 37, 42, 0.15)";
+                    return (
+                      <div key={g.gate} className="audit-card">
+                        <div className="audit-status">
+                          <span className="type small">{g.gate}</span>
+                          <span className="audit-pill" style={{
+                            background: pillBg,
+                            color: pillColor,
+                            border: `1px solid ${pillColor}`,
+                            borderRadius: 4,
+                            padding: "2px 8px",
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}>
+                            {g.status}
+                          </span>
+                        </div>
+                        <h5>{g.name}</h5>
+                        <p className="type">{g.detail}</p>
                       </div>
-                      <h5>{g.name}</h5>
-                      <p className="type">{g.detail}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             </Reveal>

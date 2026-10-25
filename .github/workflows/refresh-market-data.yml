@@ -8,7 +8,7 @@ on:
   push:
     paths:
       - "python_pipeline/scrape_live_bhavcopy.py"
-      - "python_pipeline/fetch_mcx_live.py"
+      - "python_pipeline/walkforward_engine.py"
       - ".github/workflows/refresh-market-data.yml"
   workflow_dispatch: # Manual trigger from GitHub UI → Actions tab
 
@@ -42,16 +42,19 @@ jobs:
       - name: Install Playwright browsers
         run: python -m playwright install chromium --with-deps
 
-      - name: Run MCX Bhavcopy scraper
+      - name: Run MCX Bhavcopy scraper and pipeline
         run: python python_pipeline/scrape_live_bhavcopy.py
         # Script writes to:
         #   data/live_summary.json
         #   data/bhavcopy_gold.json
+        #   data/spread_series.json
+        #   data/validation.json
+        #   lib/mock-data.js
 
       - name: Check if data files were updated
         id: diff
         run: |
-          git diff --quiet data/live_summary.json data/bhavcopy_gold.json \
+          git diff --quiet data/live_summary.json data/bhavcopy_gold.json data/spread_series.json data/validation.json lib/mock-data.js \
             && echo "changed=false" >> "$GITHUB_OUTPUT" \
             || echo "changed=true" >> "$GITHUB_OUTPUT"
 
@@ -60,7 +63,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/live_summary.json data/bhavcopy_gold.json
+          git add data/live_summary.json data/bhavcopy_gold.json data/spread_series.json data/validation.json lib/mock-data.js
           git commit -m "chore(data): refresh MCX gold futures [$(date -u +'%Y-%m-%d %H:%M UTC')]"
           git push
 

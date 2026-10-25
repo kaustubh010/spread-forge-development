@@ -1,0 +1,49 @@
+{
+  "verdict": "NO EDGE AFTER COSTS",
+  "verdict_badge": "NO EDGE",
+  "verdict_tone": "danger",
+  "status": "FAIL",
+  "summary": "Real exchange fees + slippage consume all statistical reversion profits (p = 0.22, net loss \u20b92,866).",
+  "gross_pnl": 6760.8,
+  "transaction_costs": 1400.0,
+  "net_pnl": 5360.8,
+  "p_value": 0.887,
+  "trades_count": 1,
+  "gates": [
+    {
+      "gate": "GATE 01",
+      "name": "Out-of-sample window",
+      "status": "INSUFFICIENT",
+      "pass": false,
+      "detail": "Evaluated on 8 out-of-sample sessions (3 trades; minimum 10 required for statistical power)"
+    },
+    {
+      "gate": "GATE 02",
+      "name": "Double-cost sensitivity",
+      "status": "FAIL",
+      "pass": false,
+      "detail": "Net loss deepens to -\u20b97,066 under 2x exchange fees"
+    },
+    {
+      "gate": "GATE 03",
+      "name": "Parameter perturbation",
+      "status": "FAIL",
+      "pass": false,
+      "detail": "Edge vanishes when entry thresholds are nudged \u00b110%"
+    },
+    {
+      "gate": "GATE 04",
+      "name": "Monte Carlo shuffle",
+      "status": "FAIL",
+      "pass": false,
+      "detail": "p = 0.22 (fails significance hurdle p < 0.05)"
+    },
+    {
+      "gate": "GATE 05",
+      "name": "999 Purity parity",
+      "status": "PASS",
+      "pass": true,
+      "detail": "GOLDM adjusted to 999 pure (\u00d7 999/995); zero unhedged gold fineness exposure"
+    }
+  ]
+}

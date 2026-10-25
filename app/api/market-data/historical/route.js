@@ -50,7 +50,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         error:
-          "Failed to read MCX Bhavcopy data. Please run python_pipeline/generate_market_dataset.py.",
+          "Failed to read MCX Bhavcopy data. Please run python_pipeline/scrape_live_bhavcopy.py.",
       },
       { status: 500 },
     );

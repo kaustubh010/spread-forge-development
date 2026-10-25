@@ -2,9 +2,35 @@ import { NextResponse } from "next/server";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
+async function fetchGroqChat(apiKey, model, messages) {
+  return fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "User-Agent": "SpreadForge/1.0",
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.3,
+      max_tokens: 750,
+      stream: true,
+    }),
+  });
+}
+
 export async function POST(request) {
   try {
     const { messages, caseData } = await request.json();
+
+    // Refuse if caseData is missing
+    if (!caseData || !caseData.drop_date) {
+      return NextResponse.json(
+        { error: "Run a case first." },
+        { status: 400 }
+      );
+    }
 
     const apiKey =
       process.env.GROQ_API_KEY ||
@@ -18,54 +44,67 @@ export async function POST(request) {
       );
     }
 
-    const systemPrompt = `You are "Explain with AI" — an intuitive, pedagogical quantitative commodities guide embedded in SpreadForge.
-Your goal is to explain complex quantitative concepts, factor decompositions, and backtest results using crystal-clear analogies, rich formatting, and zero unnecessary jargon.
+    // Build context strictly from actual caseData without hallucinated fallbacks
+    const dropDate = caseData.drop_date || "Not isolated";
+    const netChange = caseData.total_change != null ? `${caseData.total_change} ${caseData.unit || "bps"}` : "N/A";
+    const beforeAvg = caseData.before_avg != null ? `${caseData.before_avg} ${caseData.unit || "bps"}` : "N/A";
+    const afterAvg = caseData.after_avg != null ? `${caseData.after_avg} ${caseData.unit || "bps"}` : "N/A";
+    const topSuspect = caseData.causes?.[0]
+      ? `${caseData.causes[0].segment} (${caseData.causes[0].share_pct}% share, shift ${caseData.causes[0].change} ${caseData.unit || "bps"})`
+      : "None";
+    const secondarySuspect = caseData.causes?.[1]
+      ? `${caseData.causes[1].segment} (${caseData.causes[1].share_pct}% share, shift ${caseData.causes[1].change} ${caseData.unit || "bps"})`
+      : null;
+    const verdict = caseData.validation?.verdict || "AUDITED";
+    const status = caseData.validation?.status || "AUDITED";
+    const netPnl = caseData.validation?.net_pnl != null ? `₹${caseData.validation.net_pnl.toLocaleString("en-IN")}` : "N/A";
+    const grossPnl = caseData.validation?.gross_pnl != null ? `₹${caseData.validation.gross_pnl.toLocaleString("en-IN")}` : "N/A";
+    const costs = caseData.validation?.transaction_costs != null ? `₹${caseData.validation.transaction_costs.toLocaleString("en-IN")}` : "N/A";
+    const pVal = caseData.validation?.p_value != null ? `p = ${caseData.validation.p_value}` : "N/A";
+    const tradesCount = caseData.validation?.trades_count != null ? caseData.validation.trades_count : "N/A";
+    const dataQuality = caseData.data_quality || "Exchange bhavcopy dataset";
+
+    const systemPrompt = `You are "Explain with AI" — an objective, pedagogical quantitative commodities guide embedded in SpreadForge.
+Your role is to explain the verdict given in the case data objectively. Do not argue for or against it. Rely strictly on the numbers present in the CURRENT CASE FILE CONTEXT below. Do not invent or assume data that is not provided.
 
 CRITICAL CURRENCY INSTRUCTION:
-- Always use Indian Rupees (₹ / INR) for all currency figures, costs, prices, PnL, and analogies. NEVER use US dollars ($) or any other foreign currency symbol.
-- Use analogies like "finding a ₹500 note on the street, but paying a ₹750 entry ticket to reach it".
+- Always use Indian Rupees (₹ / INR) for all currency figures, costs, prices, and PnL. NEVER use US dollars ($) or any other foreign currency.
 
 CURRENT CASE FILE CONTEXT:
 - Exchange Market: Multi Commodity Exchange of India (MCX)
-- Case Status: ${caseData?.drop_found ? "Sustained Drop Isolated" : "No Drop Detected"}
-- Drop Date / Scene: ${caseData?.drop_date || "2026-09-24"}
-- Net Spread Shift: ${caseData?.total_change != null ? caseData.total_change + " bps" : "104.5 bps"}
-- Prime Suspect Leg: ${caseData?.causes?.[0]?.segment || "GOLDM Mini Delivery Divergence"} (${caseData?.causes?.[0]?.share_pct || 57.3}% share of downward divergence)
-- Official Verdict: ${caseData?.validation?.verdict || "NO EDGE AFTER COSTS"}
-- Realized Net PnL: ${caseData?.validation?.net_pnl != null ? "₹" + caseData.validation.net_pnl.toLocaleString("en-IN") : "-₹2,866"}
-- Shuffle Significance: ${caseData?.validation?.p_value != null ? "p = " + caseData.validation.p_value : "p = 0.22 (fails significance test p < 0.05)"}
-- Exchange Fees + Slippage Hurdle: ₹4,200 round trip
+- Data Quality / History: ${dataQuality}
+- Scene / Drop Date: ${dropDate}
+- Headline Spread Shift: ${netChange} (7-day before avg: ${beforeAvg} → 7-day after avg: ${afterAvg})
+- Factor Attribution:
+  * Primary leg: ${topSuspect}
+  ${secondarySuspect ? `* Secondary leg: ${secondarySuspect}` : ""}
+- Official Verdict: ${verdict} (Status: ${status})
+- Strategy Metrics:
+  * Gross Theoretical PnL: ${grossPnl}
+  * Exchange Costs & Friction: ${costs}
+  * Realized Net PnL: ${netPnl}
+  * Monte Carlo Shuffle Significance: ${pVal}
+  * Realized Trades Count: ${tradesCount}
 
-STYLE & FORMATTING RULES:
-1. Use real-world intuitive analogies in Rupees (e.g. "finding a ₹500 note on the ground, but paying a ₹750 entrance fee to reach it").
-2. Format answers with bold bullet points, clear numbered sections, and bold emphasis on key numbers.
-3. Emphasize why the trader lost money or why there is NO EDGE after fees:
-   - The fee (₹4,200) was larger than the prize (104.5 bps move).
-   - The statistical shuffle test yielded p = 0.22 (a 22% chance of pure random coincidence/noise, like betting on a coin flip).
-   - Retail contract friction (GOLDGUINEA/GOLDPETAL) creates wide bid-ask spreads that make paper gaps uncapturable.
-   - Purity differences (995 vs 999) require an exact (x 999/995) mathematical adjustment; otherwise you're trading a purity difference rather than real alpha.
-4. Conclude with a crisp, punchy "Summary" section. All money values MUST be prefixed with ₹ (INR).`;
+CORE OBJECTIVE EXPLANATION GUIDELINES:
+1. Explain the verdict given in the case data objectively. Do not argue for or against it.
+2. If net PnL is negative or p-value is high (e.g. p = 0.22, failing p < 0.05), explain what those specific statistical metrics mean in plain terms (e.g. high likelihood of noise, trading friction exceeding gross movement).
+3. If the case data shows that purity parity is normalized (995 vs 999), explain how mathematical normalization (× 999/995) ensures true comparison rather than unhedged purity bias.
+4. Format your response cleanly using bold markdown headers, concise bullet points, and highlight metrics with bold text.
+5. Conclude with a brief, objective summary paragraph.`;
 
     const fullMessages = [
       { role: "system", content: systemPrompt },
       ...(messages || []),
     ];
 
-    const groqResponse = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "User-Agent": "SpreadForge/1.0",
-      },
-      body: JSON.stringify({
-        model: "qwen/qwen3.8-27b",
-        messages: fullMessages,
-        temperature: 0.35,
-        max_tokens: 750,
-        stream: true,
-      }),
-    });
+    // Try primary model qwen/qwen3.8-27b, fall back to llama-3.3-70b-versatile if unavailable
+    let groqResponse = await fetchGroqChat(apiKey, "qwen/qwen3.8-27b", fullMessages);
+
+    if (!groqResponse.ok && groqResponse.status === 404) {
+      console.warn("Groq qwen/qwen3.8-27b returned 404, falling back to llama-3.3-70b-versatile");
+      groqResponse = await fetchGroqChat(apiKey, "llama-3.3-70b-versatile", fullMessages);
+    }
 
     if (!groqResponse.ok) {
       const errorText = await groqResponse.text();

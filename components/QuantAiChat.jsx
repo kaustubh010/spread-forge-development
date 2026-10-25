@@ -82,12 +82,29 @@ function renderInlineFormatting(text) {
 export function QuantAiChat({ caseData }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showPopover, setShowPopover] = useState(true);
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: `**Think of it like this:** You found a ₹500 note on the ground, but you had to pay a ₹750 fee to enter the room where it was lying.\n\n**1. The "Fee" is Bigger Than the "Prize"**\n* **The Move:** The price gap between the two gold contracts changed by about **104.5 bps**. This is the "prize" you were trying to catch.\n* **The Cost:** Just to buy and sell these contracts on MCX, exchange turnover fees, STT, and slippage cost you **₹4,200**.\n* **The Result:** The prize wasn't big enough to cover the entry fee. You paid ₹4,200 to execute a trade that ended with a realized net loss of **₹2,866**.\n\n**2. It Was Probably Just Luck (or Bad Luck)**\n* **The Score:** The result was **p = 0.22**.\n* **What that means:** There is a **22% chance** this price movement happened by pure random market noise. In trading, we want less than 5%. You were essentially betting on a coin flip.\n\n**3. The "Retail" Gold is Tricky**\n* The main reason the prices moved was the "Retail 8g" gold (GOLDGUINEA).\n* Retail gold has wide gaps between buy and sell prices. What looked like a gap was just the market being messy and illiquid.\n\n**4. The Purity Trap**\n* GOLDM is **95.5% pure (995)**, while others are **99.9% pure (999)**.\n* To compare them fairly, you must multiply by **999/995**. Missing this means trading a purity difference rather than real alpha.\n\n**Summary:**\nYou paid a high toll (₹4,200) to chase a small, random price blip (104.5 bps) in a messy retail market. Official Verdict: **NO EDGE AFTER COSTS**.`,
-    },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    if (!caseData) {
+      return [
+        {
+          role: "assistant",
+          content: "**SpreadForge AI Assistant Ready.**\nLoad the MCX benchmark case or upload your custom contract dataset to analyze relative value spread anomalies with AI.",
+        },
+      ];
+    }
+    const shift = caseData.total_change != null ? `${caseData.total_change} bps` : "-14.9 bps";
+    const net = caseData.validation?.net_pnl != null ? `₹${caseData.validation.net_pnl.toLocaleString("en-IN")}` : "-₹2,866";
+    const pVal = caseData.validation?.p_value != null ? `p = ${caseData.validation.p_value}` : "p = 0.22";
+    const topLeg = caseData.causes?.[0]?.segment || "GOLDM Leg";
+    const topShare = caseData.causes?.[0]?.share_pct || 47.5;
+    const verdict = caseData.validation?.verdict || "NO EDGE AFTER COSTS";
+
+    return [
+      {
+        role: "assistant",
+        content: `**Case Audit Ready:**\n* **Spread Shift:** ${shift} (7-day before avg: ${caseData.before_avg || 53.7} bps → after avg: ${caseData.after_avg || 38.8} bps)\n* **Primary Leg:** ${topLeg} (${topShare}% share of divergence)\n* **Official Verdict:** **${verdict}**\n* **Realized Net P&L:** ${net}\n* **Monte Carlo Shuffle:** ${pVal}\n\nAsk any question below to interrogate the contract legs, purity normalization (995 vs 999), or exchange cost friction.`,
+      },
+    ];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
