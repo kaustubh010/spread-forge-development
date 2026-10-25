@@ -87,16 +87,30 @@ def scrape_mcx_gold_live(target_dates: List[str] = None) -> Dict[str, Any]:
     b = p.chromium.launch(
         channel=browser_channel,
         headless=True,
-        args=["--disable-blink-features=AutomationControlled"]
+        args=[
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage"
+        ]
     )
     context = b.new_context(
-        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        viewport={"width": 1920, "height": 1080},
+        locale="en-IN",
+        timezone_id="Asia/Kolkata"
     )
     page = context.new_page()
-    page.add_init_script("delete Object.getPrototypeOf(navigator).webdriver")
+    page.add_init_script("Object.defineProperty(navigator, 'webdriver', { get: () => undefined });")
 
     print("[1/3] Establishing authenticated session with MCX India portal...")
-    page.goto("https://www.mcxindia.com/market-data/bhavcopy", timeout=40000, wait_until="networkidle")
+    try:
+        resp = page.goto("https://www.mcxindia.com/market-data/bhavcopy", timeout=45000, wait_until="domcontentloaded")
+        page.wait_for_timeout(2000)
+        status_code = resp.status if resp else "unknown"
+        print(f"  Portal response: HTTP {status_code} | Title: '{page.title()}' | URL: {page.url}")
+    except Exception as e:
+        print(f"  Portal connection error: {e}")
 
     # Dismiss any disclaimer/cookies modal
     try:
@@ -116,15 +130,24 @@ def scrape_mcx_gold_live(target_dates: List[str] = None) -> Dict[str, Any]:
         encoded_date = d_str.replace("/", "%2F")
         js_code = f"""async () => {{
             try {{
-                const res = await fetch('/market-data/bhavcopy/GetDateWiseBhavCopy?InstrumentName=ALL&fromDate={encoded_date}', {{
+                const res = await fetch('https://www.mcxindia.com/market-data/bhavcopy/GetDateWiseBhavCopy?InstrumentName=ALL&fromDate={encoded_date}', {{
                     headers: {{
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json, text/javascript, */*; q=0.01'
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Referer': 'https://www.mcxindia.com/market-data/bhavcopy'
                     }}
                 }});
-                if (!res.ok) return {{ success: false, status: res.status }};
-                const json = await res.json();
-                if (!json || !json.IsSuccess || !Array.isArray(json.Data)) return {{ success: false }};
+                if (!res.ok) return {{ success: false, status: res.status, statusText: res.statusText }};
+                const text = await res.text();
+                let json;
+                try {{
+                    json = JSON.parse(text);
+                }} catch(e) {{
+                    return {{ success: false, status: res.status, htmlPreview: text.substring(0, 100) }};
+                }}
+                if (!json || !json.IsSuccess || !Array.isArray(json.Data)) {{
+                    return {{ success: false, status: res.status, raw: json }};
+                }}
                 
                 // Filter solely FUTCOM commodity futures for our gold contracts
                 const filtered = json.Data.filter(item => 
@@ -140,7 +163,15 @@ def scrape_mcx_gold_live(target_dates: List[str] = None) -> Dict[str, Any]:
 
         res = page.evaluate(js_code)
         if not res.get("success") or not res.get("data"):
-            print(f"  [Holiday/Empty] {d_str} returned no trade records.")
+            diag = []
+            if "status" in res:
+                diag.append(f"HTTP {res['status']}")
+            if "error" in res:
+                diag.append(f"JS: {res['error']}")
+            if "htmlPreview" in res:
+                diag.append(f"Preview: {res['htmlPreview']}")
+            diag_str = f" ({', '.join(diag)})" if diag else ""
+            print(f"  [Holiday/Empty] {d_str} returned no trade records{diag_str}.")
             continue
 
         scraped_dates_count += 1
@@ -241,6 +272,19 @@ def scrape_mcx_gold_live(target_dates: List[str] = None) -> Dict[str, Any]:
             "liquidity": CONTRACT_SPECS[sym]["liquidity"],
             "status": f"Live MCX · {last.get('tradingDate', 'Today')}",
         })
+
+    if scraped_dates_count == 0:
+        print("\n============================================================")
+        print("[WARNING] MCX portal returned 0 sessions for this run.")
+        print("This typically happens if the exchange portal WAF is geo-blocking cloud/CI IP addresses or is temporarily unresponsive.")
+        output_path = os.path.join("data", "bhavcopy_gold.json")
+        if os.path.exists(output_path):
+            print(f"[RECOVERY] Preserving existing verified dataset in {output_path} to avoid data loss.")
+            with open(output_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        else:
+            print("[ERROR] No existing bhavcopy dataset found to preserve.")
+            sys.exit(1)
 
     payload = {
         "generatedAt": datetime.datetime.now().isoformat(),
