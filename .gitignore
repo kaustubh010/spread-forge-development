@@ -14,3 +14,8 @@ __v0_jsx-dev-runtime.ts
 node_modules
 .next/
 .DS_Store
+
+# Scraper temporary CSV files
+downloads/
+__pycache__/
+*.pyc
